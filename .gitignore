@@ -1,0 +1,20 @@
+## ------------ ##
+##   Ansible    ##
+## ------------ ##
+
+inventories/*
+!inventories/example
+
+
+## -------------------- ##
+##    Generated Files   ##
+## -------------------- ##
+
+ssh_keys
+
+
+## ------------------ ##
+##    Miscellaneous   ##
+## ------------------ ##
+
+.vscode

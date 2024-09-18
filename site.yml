@@ -1,0 +1,81 @@
+- name: "Deploy New VM"
+  hosts: localhost
+  tasks:
+    - name: Clone template VM
+      community.general.proxmox_kvm:
+        node: "{{ item.proxmox_node }}"
+        newid: "{{ item.vmid }}"
+        name: "{{ item.name }}"
+        vmid: "{{ item.clone_vmid }}"
+        clone: ubuntu-jammy-cloud
+        api_user: "{{ proxmox_user }}"
+        api_token_id: "{{ proxmox_token }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        api_host: "{{ proxmox_host }}"
+        storage: "{{ item.storage }}"
+        ciuser: "{{ item.username }}"
+        sshkeys: "{{ item.sshkeys }}"
+        ipconfig:
+          ip: "{{ item.net.ip }}"
+          gw: "{{ item.net.gateway }}"
+        timeout: 90
+        state: present
+      loop: "{{ vms }}"
+
+    - name: Create ssh key directory
+      ansible.builtin.file:
+        path: "./ssh_keys/{{ item.vmid }}"
+        mode: "775"
+        state: directory
+      loop: "{{ vms }}"
+
+    - name: Create a ssh key
+      community.crypto.openssh_keypair:
+        path: "./ssh_keys/{{ item.vmid }}/vm-key"
+        type: ed25519
+      loop: "{{ vms }}"
+
+    - name: Update VM configuration
+      community.general.proxmox_kvm:
+        update: true
+        node: "{{ item.proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        name: "{{ item.name }}"
+        cores: "{{ item.cpus }}"
+        memory: "{{ item.memory }}"
+        api_user: "{{ proxmox_user }}"
+        api_token_id: "{{ proxmox_token }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        api_host: "{{ proxmox_host }}"
+        ciuser: "{{ item.username }}"
+        sshkeys: |
+          {{ lookup('file', './ssh_keys/{{ item.vmid }}/vm-key.pub') }}
+          {{ item.sshkeys }}
+        ipconfig:
+          ipconfig0: "ip={{ item.net.ip }},gw={{ item.net.gateway }}"
+        timeout: 90
+        state: present
+      loop: "{{ vms }}"
+
+    - name: Resize disk
+      community.general.proxmox_disk:
+        vmid: "{{ item.vmid }}"
+        disk: virtio0
+        size: "{{ item.disk_size }}"
+        api_user: "{{ proxmox_user }}"
+        api_token_id: "{{ proxmox_token }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        api_host: "{{ proxmox_host }}"
+        state: resized
+      loop: "{{ vms }}"
+
+    - name: Start VM
+      community.general.proxmox_kvm:
+        node: "{{ item.proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        api_user: "{{ proxmox_user }}"
+        api_token_id: "{{ proxmox_token }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        api_host: "{{ proxmox_host }}"
+        state: started
+      loop: "{{ vms }}"
