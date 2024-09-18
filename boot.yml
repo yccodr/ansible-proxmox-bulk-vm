@@ -1,0 +1,13 @@
+- name: "Boot VM"
+  hosts: localhost
+  tasks:
+    - name: Start VM
+      community.general.proxmox_kvm:
+        node: "{{ item.proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        api_user: "{{ proxmox_user }}"
+        api_token_id: "{{ proxmox_token }}"
+        api_token_secret: "{{ proxmox_token_secret }}"
+        api_host: "{{ proxmox_host }}"
+        state: started
+      loop: "{{ vms }}"
