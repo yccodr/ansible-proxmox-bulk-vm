@@ -41,6 +41,7 @@
         node: "{{ item.proxmox_node }}"
         vmid: "{{ item.vmid }}"
         name: "{{ item.name }}"
+        tags: "{{ item.tags }}"
         cores: "{{ item.cpus }}"
         memory: "{{ item.memory }}"
         api_user: "{{ proxmox_user }}"

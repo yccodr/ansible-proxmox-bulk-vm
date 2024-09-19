@@ -8,6 +8,8 @@ vms:
     proxmox_node: pve1
     clone_vmid: 9999
     storage: local-lvm
+    tags:
+      - ansible-test
     cpus: 2
     memory: 4096
     disk_size: 10G
